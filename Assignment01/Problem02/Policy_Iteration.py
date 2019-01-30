@@ -1,9 +1,9 @@
-from lib.envs.gridworld import GridworldEnv
+from gridworld import GridworldEnv
 import numpy as np
 import gym
 from gym import wrappers
 import itertools
-
+import argparse
 
 """
 Original Grid world environment was taken from link: https://github.com/dennybritz/reinforcement-learning
@@ -18,8 +18,7 @@ I modified it with:
 """
 
 
-def Policy_Evaluation(env, policy, theta=0.005, discount_factor=0.9):
-
+def Policy_Evaluation(env, policy, stop_itr=10, theta=0.005, discount_factor=0.9):
 	def one_step_lookahead(state, V, policy):
 		Q = np.zeros(env.nA)
 		# for given "action"
@@ -51,12 +50,12 @@ def Policy_Evaluation(env, policy, theta=0.005, discount_factor=0.9):
 		# if itr % 50 == 0:
 		#   print(delta)
 		# at each iteration cheak if delta for all state is less than expected theta
-		if delta < theta :
-			print('Value function Converged after {} iterations'.format(itr))
+		if delta < theta:
+			print('Running Policy Iteration; Value function Converged after {} iterations'.format(itr))
 			break
-		if itr >= 100000:
-			print('Has not converged')
-			break
+		#if itr >= 1000000:
+		#	print('Value function has not converged')
+		#	break
 	return V
 
 
@@ -88,11 +87,49 @@ def Policy_Improvement(env, policy, V, discount_factor=0.9):
 	return policy, policy_stable
 
 
+def parse_args():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--grid_size', default=5, type=int)
+	parser.add_argument('--prob_p', default=0.9, type=float)
+	parser.add_argument('--Final_Result', default=False, type=bool)
+	args = parser.parse_args()
+	return args
 
-if __name__ == '__main__':
-	N = 4
-	from lib.envs.gridworld import GridworldEnv
-	env = GridworldEnv(shape=[N, N], prob_p=0.9)  # default prob_p = 1.0; change the value to make action stochastic
+
+def Print_Final_Result(policy, V,N):
+	#print("Policy Probability Distribution:")
+	#print(policy)
+	#print("")
+
+	print("Reshaped Grid- Final Policy (0=up, 1=right, 2=down, 3=left):")
+	print(np.reshape(np.argmax(policy, axis=1), (N,-1)))
+	print("")
+
+	#print("Value Function:")
+	#print(V)
+	#print("")
+
+	print("Reshaped Grid- Final Value Function:")
+	print(np.around(V.reshape((N,-1)),2))
+	print("")
+
+
+def assignment_report(V,N):
+	print("Value Function:")
+	print(np.around(V.reshape((N, -1)), 2))
+	# here:
+	# reshaped value function according to grid shape
+	# np.around truncates to 2 decimal
+	print("")
+
+def main():
+	args = parse_args()
+	N = args.grid_size  # N= 4
+	prob_p = args.prob_p  # prop_p = 0.9
+	Final_Result = args.Final_Result
+
+	from gridworld import GridworldEnv
+	env = GridworldEnv(shape=[N, N], prob_p=prob_p)  # default prob_p = 1.0; change the value to make action stochastic
 
 	# Start with a random policy
 	policy = np.ones([env.nS, env.nA]) / env.nA
@@ -102,26 +139,23 @@ if __name__ == '__main__':
 		print("Epoch {}".format(i))
 		# optimize value function for current policy
 		V = Policy_Evaluation(env, policy)
+
+		# Print value function after each Iteration
+		assignment_report(V,N)
+
 		# improve current policy
-		new_policy,policy_stable = Policy_Improvement (env, policy, V)
+		new_policy, policy_stable = Policy_Improvement(env, policy, V)
+
 		if policy_stable == True:
-			print('Policy Iteration Converged after {} iteration'.format(i+1))
+			print('Policy Iteration Converged after {} iteration'.format(i + 1))
 			break
 		print('Policy has not converged, updating new policy')
 		print('---------------------------------------------')
 		policy = new_policy
 
-	print("Policy Probability Distribution:")
-	print(policy)
-	print("")
+	if Final_Result == True:
+		Print_Final_Result(policy, V, N)
 
-	print("Reshaped Grid Policy (0=up, 1=right, 2=down, 3=left):")
-	print(np.reshape(np.argmax(policy, axis=1), (env.nA,-1)) )
-	print("")
 
-	print("Value Function:")
-	print(V)
-	print("")
-
-	print("Reshaped Grid Value Function:")
-	print(V.reshape((env.nA,-1)))
+if __name__ == '__main__':
+	main()
