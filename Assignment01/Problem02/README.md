@@ -15,7 +15,7 @@ currently considered by your algorithm and compute its exact value.
 To test your algorithm, use a grid world in which, at each time step, your actions move in the
 desired direction w.p. p and in a random direction w.p. (1 − p). 
 
-# Geid Description:
+# Grid Description:
 The grid is empty, of size n × n. There is a positive reward of +10 in the upper right corner and a positive reward of +1 in the upper left corner. All other rewards are 0. The positive-reward states are absorbing (i.e. terminal). If the agent bumps into the edge of the grid as a result of a transition, it stays in the same spot. 
 
 The discount factor is γ = 0.9. You need to test your algorithm with two different values of p (0.9 and 0.7) and with two different sizes of grid (n = 5 and n = 50). Explain what you see in these results.
